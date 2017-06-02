@@ -1,0 +1,49 @@
+
+core_usesIn core/variable variable
+core_usesIn bishbosh/connection/write SUBSCRIBE PUBLISH
+
+winkmqtt_sync_aprontest() {
+  "$winkmqtt_aprontestPath" "$@"
+}
+
+winkmqtt_sync_all() {
+  core_message DEBUG 'syncing all'
+  while read -r id; do
+    winkmqtt_sync_device "$id"
+  done << EOF
+$(winkmqtt_sync_aprontest -l | awk '$1 ~ /^[0-9]/ {print $1}; !NF {exit}')
+EOF
+}
+
+winkmqtt_sync_device() {
+  local id="$1"
+  local topic
+  local cached
+  core_message DEBUG "syncing device $id"
+  while read -r key value; do
+    topic="${winkmqtt_topicBase}/${id}/${key}"
+    cached="${winkmqtt_cachePrefix}_${id}_${key}"
+
+    if core_variable_isUnset "$cached"; then
+      core_variable_setVariable "$cached" _winkmqtt_attr_init_
+      core_message DEBUG "subscribing ${topic}/set"
+      bishbosh_subscribe "${topic}/set" 0
+    fi
+
+    core_variable_indirectValue "$cached"
+    if [ "$core_variable_indirectValue_result" != "$value" ]; then
+      core_message DEBUG "publishing $topic value $value"
+      core_variable_setVariable "$cached" "$value"
+      bishbosh_publishText 0 "$topic" yes "$value"
+    else
+      core_message DEBUG "skipping $topic value $value"
+    fi
+  done << EOF
+$(winkmqtt_sync_aprontest -l -m "$id" | awk -F '|' '$1 ~ /^ *[0-9]/ {print $1,$5}')
+EOF
+}
+
+winkmqtt_sync_set_attr() {
+  core_message DEBUG "setting device $1 attr $2 value $3"
+  winkmqtt_sync_aprontest -u -m "$1" -t "$2" -v "$3" 1>&2 || true
+}

@@ -1,0 +1,5 @@
+
+build() {
+  build_prepareOutput
+  build_fattenAndSwaddle 'wink-mqtt' "$build_relativePath" 'wink-mqtt'
+}

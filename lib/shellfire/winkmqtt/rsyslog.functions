@@ -1,0 +1,23 @@
+
+core_usesIn core/variable variable
+core_usesIn bishbosh/connection foreground
+core_usesIn winkmqtt sync
+
+winkmqtt_rsyslog_handler() {
+  {
+    local id
+    while read -r line; do
+      core_message DEBUG "read rsyslog $line"
+      if core_variable_contains "$line" 'state changed in device'; then
+        id="$(echo "$line" | sed 's/^.*state changed in device \([0-9]\+\).*$/\1/')"
+        core_message DEBUG "device state changed $id"
+        winkmqtt_sync_device "$id"
+      else
+        core_message DEBUG "ignored rsyslog msg $line"
+      fi
+    done
+    core_message NOTICE "rsyslog eof killing $$"
+    kill $$ 2>/dev/null || true
+  } <&7 &
+  bishbosh_connection_foreground_recordBackgroundJob winkmqtt_rsyslog_handlerPid
+}

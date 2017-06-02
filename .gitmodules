@@ -1,0 +1,20 @@
+[submodule "bish-bosh"]
+	path = bish-bosh
+	url = https://github.com/raphaelcohn/bish-bosh.git
+	branch = master
+[submodule "lib/shellfire/build"]
+	path = lib/shellfire/build
+	url = https://github.com/shellfire-dev/build.git
+	branch = master
+[submodule "lib/shellfire/core"]
+	path = lib/shellfire/core
+	url = https://github.com/shellfire-dev/core.git
+	branch = master
+[submodule "tools/fatten"]
+	path = tools/fatten
+	url = https://github.com/shellfire-dev/fatten.git
+	branch = master
+[submodule "tools/swaddle"]
+	path = tools/swaddle
+	url = https://github.com/raphaelcohn/swaddle.git
+	branch = master
